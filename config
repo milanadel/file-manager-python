@@ -1,0 +1,6 @@
+[PATHS]
+workspace = ./workspace
+max_file_size = 10485760  # 10MB
+
+[USERS]
+admin = 5f4dcc3b5aa765d61d8327deb882cf99  # password: 'password'
