@@ -1,0 +1,11 @@
+class FileManagerError(Exception):
+    """Базовое исключение для файлового менеджера"""
+    pass
+
+class SecurityError(FileManagerError):
+    """Попытка выйти за пределы рабочей директории"""
+    pass
+
+class FileSystemError(FileManagerError):
+    """Ошибка файловой системы"""
+    pass
