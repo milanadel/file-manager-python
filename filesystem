@@ -1,0 +1,41 @@
+import os
+import shutil
+from pathlib import Path
+from .exceptions import SecurityError, FileSystemError
+
+class FileSystemManager:
+    def __init__(self, workspace):
+        self.workspace = Path(workspace).resolve()
+        if not self.workspace.exists():
+            self.workspace.mkdir(parents=True)
+
+    def _validate_path(self, path):
+        """Проверка, что путь находится в рабочей директории"""
+        full_path = (self.workspace / path).resolve()
+        if not str(full_path).startswith(str(self.workspace)):
+            raise SecurityError("Access denied: cannot operate outside workspace")
+        return full_path
+
+    def create_file(self, filename, content=""):
+        try:
+            path = self._validate_path(filename)
+            path.write_text(content)
+            return True
+        except Exception as e:
+            raise FileSystemError(f"Cannot create file: {e}")
+
+    def list_dir(self, path="."):
+        try:
+            path = self._validate_path(path)
+            return [item.name for item in path.iterdir()]
+        except Exception as e:
+            raise FileSystemError(f"Cannot list directory: {e}")
+
+    def copy_file(self, src, dst):
+        try:
+            src_path = self._validate_path(src)
+            dst_path = self._validate_path(dst)
+            shutil.copy2(src_path, dst_path)
+            return True
+        except Exception as e:
+            raise FileSystemError(f"Cannot copy file: {e}")
