@@ -1,0 +1,37 @@
+from functools import wraps
+from .exceptions import FileManagerError
+
+def handle_errors(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except FileManagerError as e:
+            return f"Error: {str(e)}"
+    return wrapper
+
+class CommandProcessor:
+    def __init__(self, fs_manager, nav_manager):
+        self.fs = fs_manager
+        self.nav = nav_manager
+
+    @handle_errors
+    def ls(self, path=""):
+        return "\n".join(self.fs.list_dir(path))
+
+    @handle_errors
+    def cd(self, path):
+        if self.nav.change_dir(path):
+            return f"Current directory: {self.nav.get_current_path()}"
+        return "Directory not found"
+
+    @handle_errors
+    def mkdir(self, dirname):
+        path = self.fs._validate_path(dirname)
+        path.mkdir()
+        return f"Directory created: {dirname}"
+
+    @handle_errors
+    def cp(self, src, dst):
+        if self.fs.copy_file(src, dst):
+            return f"Copied {src} to {dst}"
