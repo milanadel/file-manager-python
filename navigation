@@ -1,0 +1,23 @@
+import os
+from pathlib import Path
+from .exceptions import SecurityError
+
+class NavigationManager:
+    def __init__(self, workspace):
+        self.workspace = Path(workspace).resolve()
+        self.current_path = self.workspace
+
+    def change_dir(self, path):
+        try:
+            new_path = (self.current_path / path).resolve()
+            if not str(new_path).startswith(str(self.workspace)):
+                raise SecurityError("Cannot navigate outside workspace")
+            if new_path.is_dir():
+                self.current_path = new_path
+                return True
+            return False
+        except Exception as e:
+            raise SecurityError(f"Cannot change directory: {e}")
+
+    def get_current_path(self):
+        return str(self.current_path.relative_to(self.workspace))
