@@ -1,0 +1,20 @@
+import hashlib
+import configparser
+from pathlib import Path
+
+class AuthManager:
+    def __init__(self, config_path):
+        self.config = configparser.ConfigParser()
+        self.config.read(config_path)
+        self.users = dict(self.config.items('USERS'))
+
+    def authenticate(self, username, password):
+        stored_hash = self.users.get(username)
+        if not stored_hash:
+            return False
+        return stored_hash == hashlib.md5(password.encode()).hexdigest()
+
+    def create_user_dir(self, username):
+        user_dir = Path(self.config.get('PATHS', 'workspace')) / username
+        user_dir.mkdir(exist_ok=True)
+        return user_dir
