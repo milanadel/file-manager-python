@@ -1,0 +1,27 @@
+import zipfile
+import tarfile
+from pathlib import Path
+from ..core.exceptions import FileSystemError
+
+class ArchiveManager:
+    @staticmethod
+    def create_zip(source, destination):
+        try:
+            with zipfile.ZipFile(destination, 'w') as zipf:
+                if Path(source).is_dir():
+                    for file in Path(source).rglob('*'):
+                        zipf.write(file, file.relative_to(source))
+                else:
+                    zipf.write(source, Path(source).name)
+            return True
+        except Exception as e:
+            raise FileSystemError(f"Cannot create zip archive: {e}")
+
+    @staticmethod
+    def extract_zip(archive, destination):
+        try:
+            with zipfile.ZipFile(archive, 'r') as zipf:
+                zipf.extractall(destination)
+            return True
+        except Exception as e:
+            raise FileSystemError(f"Cannot extract zip archive: {e}")
