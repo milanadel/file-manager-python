@@ -1,0 +1,69 @@
+import cmd
+from pathlib import Path
+from core.auth import AuthManager
+from core.filesystem import FileSystemManager
+from core.navigation import NavigationManager
+from core.commands import CommandProcessor
+
+class FileManagerCLI(cmd.Cmd):
+    intro = "Simple File Manager. Type 'help' for commands."
+    prompt = "fm> "
+
+    def __init__(self, config_path):
+        super().__init__()
+        self.auth = AuthManager(config_path)
+        self.authenticated = False
+        self.user = None
+
+    def do_login(self, arg):
+        """Login to the system: login username password"""
+        args = arg.split()
+        if len(args) != 2:
+            print("Usage: login username password")
+            return
+        
+        username, password = args
+        if self.auth.authenticate(username, password):
+            self.authenticated = True
+            self.user = username
+            workspace = self.auth.create_user_dir(username)
+            self.fs = FileSystemManager(workspace)
+            self.nav = NavigationManager(workspace)
+            self.cmd = CommandProcessor(self.fs, self.nav)
+            print(f"Welcome, {username}!")
+        else:
+            print("Invalid credentials")
+
+    def do_ls(self, arg):
+        """List directory contents: ls [path]"""
+        if self._check_auth():
+            print(self.cmd.ls(arg))
+
+    def do_cd(self, arg):
+        """Change directory: cd path"""
+        if self._check_auth():
+            print(self.cmd.cd(arg))
+
+    def do_mkdir(self, arg):
+        """Create directory: mkdir dirname"""
+        if self._check_auth():
+            print(self.cmd.mkdir(arg))
+
+    def do_cp(self, arg):
+        """Copy file: cp source destination"""
+        if self._check_auth():
+            args = arg.split()
+            if len(args) == 2:
+                print(self.cmd.cp(*args))
+            else:
+                print("Usage: cp source destination")
+
+    def _check_auth(self):
+        if not self.authenticated:
+            print("Please login first")
+            return False
+        return True
+
+if __name__ == "__main__":
+    config_path = Path(__file__).parent / "config" / "config.ini"
+    FileManagerCLI(config_path).cmdloop()
